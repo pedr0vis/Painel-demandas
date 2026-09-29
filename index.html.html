@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Painel de demandas</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#eef1f6;--sf:#fff;--ink:#1b2233;--mut:#6a7388;--ln:#d9deea;--ac:#5b4bdb;--late:#d43d51}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151f;--sf:#1c2130;--ink:#e8ebf5;--mut:#98a1b8;--ln:#2b3246;--ac:#8b7dff;--late:#ff6b7d}}
+:root[data-theme="dark"]{--bg:#12151f;--sf:#1c2130;--ink:#e8ebf5;--mut:#98a1b8;--ln:#2b3246;--ac:#8b7dff;--late:#ff6b7d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.45 "Bricolage Grotesque",system-ui,sans-serif}
+main{max-width:1200px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:clamp(28px,5vw,40px);font-weight:800;margin:0 0 4px;letter-spacing:-.02em}
+.sub{color:var(--mut);margin:0 0 18px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.stat{background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:10px 16px;min-width:130px}
+.stat b{display:block;font-size:26px;font-weight:800}
+.stat.late b{color:var(--late)}
+form,.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-bottom:14px}
+form{background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:12px}
+label{display:flex;flex-direction:column;font-size:12px;color:var(--mut);gap:3px}
+input,select,button{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--ln);border-radius:8px;padding:7px 10px}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+button.pri{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600;cursor:pointer}
+#titulo{min-width:220px}
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start}
+@media(max-width:900px){.board{grid-template-columns:1fr}}
+.col{background:color-mix(in srgb,var(--ln) 45%,transparent);border-radius:12px;padding:10px;min-height:120px}
+.col.over{outline:2px dashed var(--ac)}
+.col h2{font-size:15px;margin:2px 4px 10px;display:flex;justify-content:space-between}
+.col h2 span{color:var(--mut);font-weight:400}
+.card{background:var(--sf);border:1px solid var(--ln);border-left:5px solid var(--p);border-radius:8px;padding:10px;margin-bottom:8px;cursor:grab}
+.card.late{border-color:var(--late);border-left-color:var(--late)}
+.card p{margin:0 0 6px;font-weight:600}
+.meta{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--mut);align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.due.late{color:var(--late);font-weight:600}
+.acts{display:flex;gap:6px;margin-top:8px}
+.acts select{flex:1;font-size:12px;padding:4px 6px}
+.acts button{font-size:12px;padding:4px 8px;cursor:pointer}
+.empty{color:var(--mut);font-size:13px;padding:6px 4px}
+.tabs{display:flex;margin-left:auto}
+.tabs button{border-radius:0;cursor:pointer}
+.tabs button:first-child{border-radius:8px 0 0 8px}
+.tabs button:last-child{border-radius:0 8px 8px 0}
+.tabs button[aria-pressed="true"]{background:var(--ac);border-color:var(--ac);color:#fff}
+.cal{display:none}
+.calon .cal{display:block}
+.calon .board{display:none}
+.cal-h{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.cal-h h2{margin:0;font-size:20px;text-transform:capitalize;min-width:170px;text-align:center}
+.cal-h button{cursor:pointer}
+.scr{overflow-x:auto}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;min-width:640px}
+.wd{font-size:12px;color:var(--mut);text-align:center}
+.day{background:var(--sf);border:1px solid var(--ln);border-radius:8px;min-height:96px;padding:4px;min-width:0}
+.day.out{opacity:.45}
+.day.today{border:2px solid var(--ac)}
+.day i{font-style:normal;font-size:12px;color:var(--mut)}
+.chip{display:block;font-size:11px;line-height:1.25;margin-top:3px;padding:3px 5px;border-radius:5px;border-left:4px solid var(--c);background:var(--bg);cursor:grab;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ck{margin-top:8px}
+.ck label{flex-direction:row;align-items:center;gap:6px;color:var(--ink);font-size:13px;margin:2px 0}
+.ck label.done span{text-decoration:line-through;color:var(--mut)}
+.ck input[type=checkbox]{padding:0;width:auto}
+.ck input[type=text]{width:100%;font-size:12px;padding:4px 6px;margin-top:4px}
+.bar{height:4px;background:var(--ln);border-radius:2px;margin:4px 0}
+.bar div{height:100%;background:var(--ac);border-radius:2px}
+.card a{color:var(--ac);font-size:12px}
+</style>
+</head>
+<body>
+<main>
+<h1>Painel de demandas</h1>
+<p class="sub">Arraste os cards entre as colunas ou use o seletor de status.</p>
+<div class="stats" id="stats"></div>
+<form id="f">
+  <label>Demanda<input id="titulo" required placeholder="Ex.: Reels de lançamento"></label>
+  <label>Cliente<input id="cliente" required placeholder="Nome do cliente" size="14"></label>
+  <label>Plataforma<select id="plat"></select></label>
+  <label>Prazo<input id="prazo" type="date" required></label>
+  <label>Prioridade<select id="prio"><option value="alta">Alta</option><option value="media" selected>Média</option><option value="baixa">Baixa</option></select></label>
+  <label>Link do material<input id="link" type="url" placeholder="https://..." size="16"></label>
+  <label>Etapas (separe por vírgula)<input id="etapas" value="Criar, Aprovar, Agendar" size="20"></label>
+  <button class="pri">Adicionar demanda</button>
+</form>
+<div class="filters">
+  <label>Cliente<select id="fc"></select></label>
+  <label>Plataforma<select id="fp"></select></label>
+  <div class="tabs"><button type="button" data-v="quadro">Quadro</button><button type="button" data-v="cal">Calendário</button></div>
+</div>
+<div class="cal" id="cal"></div>
+<div class="board" id="board"></div>
+</main>
+<script>
+const ST=[["fazer","A fazer"],["andamento","Em produção"],["aprovacao","Em aprovação"],["publicado","Publicado"]];
+const PL=["Instagram","TikTok","LinkedIn","YouTube","Facebook","X"];
+const PC={Instagram:"#d6336c",TikTok:"#0aa5a5",LinkedIn:"#1f6feb",YouTube:"#e03131",Facebook:"#3b5bdb",X:"#868e96"};
+const PR={alta:"#d43d51",media:"#e8a317",baixa:"#2f9e6e"};
+const day=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.toLocaleDateString("sv")};
+let tasks=null;
+try{tasks=JSON.parse(localStorage.getItem("demandas")||"null")}catch(e){}
+if(!tasks)tasks=[
+ {id:1,t:"Roteiro de Reels de lançamento",c:"Cliente A",p:"Instagram",d:day(-1),pr:"alta",s:"andamento",ck:[{x:"Roteiro",o:1},{x:"Gravar",o:0},{x:"Editar",o:0}]},
+ {id:2,t:"Calendário de posts do mês",c:"Cliente B",p:"LinkedIn",d:day(3),pr:"media",s:"fazer"},
+ {id:3,t:"Vídeo de bastidores",c:"Cliente A",p:"TikTok",d:day(5),pr:"baixa",s:"aprovacao"},
+ {id:4,t:"Relatório mensal de métricas",c:"Cliente C",p:"Instagram",d:day(-3),pr:"media",s:"publicado"}];
+const save=()=>{try{localStorage.setItem("demandas",JSON.stringify(tasks))}catch(e){}};
+const $=id=>document.getElementById(id);
+const esc=s=>s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const fmt=d=>d.split("-").reverse().slice(0,2).join("/");
+$("plat").innerHTML=PL.map(p=>`<option>${p}</option>`).join("");
+$("fp").innerHTML='<option value="">Todas</option>'+PL.map(p=>`<option>${p}</option>`).join("");
+$("prazo").value=day(2);
+
+let view="quadro",mes=new Date();mes.setDate(1);
+function ckHtml(t){
+  const ck=t.ck||[],n=ck.filter(i=>i.o).length;
+  return (t.l&&/^https?:\/\//i.test(t.l)?`<div><a href="${esc(t.l)}" target="_blank" rel="noopener">Abrir material</a></div>`:"")+
+  `<div class="ck">${ck.length?`<div class="meta">${n}/${ck.length} etapas</div><div class="bar"><div style="width:${n/ck.length*100}%"></div></div>`:""}`+
+  ck.map((i,k)=>`<label class="${i.o?"done":""}"><input type="checkbox" data-t="${t.id}" data-k="${k}" ${i.o?"checked":""}><span>${esc(i.x)}</span></label>`).join("")+
+  `<input type="text" data-add="${t.id}" placeholder="+ Nova etapa (Enter)" aria-label="Nova etapa"></div>`;
+}
+function calHtml(vis){
+  const y=mes.getFullYear(),m=mes.getMonth(),hj=day(0),s=new Date(y,m,1-new Date(y,m,1).getDay());
+  let h=`<div class="cal-h"><button data-nav="-1" aria-label="Mês anterior">‹</button><h2>${mes.toLocaleDateString("pt-BR",{month:"long",year:"numeric"})}</h2><button data-nav="1" aria-label="Próximo mês">›</button><button data-nav="0">Hoje</button></div><div class="scr"><div class="grid">`+["dom","seg","ter","qua","qui","sex","sáb"].map(w=>`<div class="wd">${w}</div>`).join("");
+  for(let i=0;i<42;i++){const d=new Date(s);d.setDate(s.getDate()+i);const k=d.toLocaleDateString("sv");
+    h+=`<div class="day ${d.getMonth()!==m?"out":""} ${k===hj?"today":""}" data-date="${k}"><i>${d.getDate()}</i>`+
+    vis.filter(t=>t.d===k).map(t=>`<span class="chip" draggable="true" data-cid="${t.id}" style="--c:${PC[t.p]}" title="${esc(t.c)} · ${t.p}">${t.s==="publicado"?"✓ ":""}${esc(t.t)}</span>`).join("")+`</div>`}
+  return h+`</div></div>`;
+}
+function render(){
+  const cs=[...new Set(tasks.map(t=>t.c))].sort(), cur=$("fc").value;
+  $("fc").innerHTML='<option value="">Todos</option>'+cs.map(c=>`<option ${c===cur?"selected":""}>${esc(c)}</option>`).join("");
+  const fc=$("fc").value, fp=$("fp").value, hoje=day(0), em7=day(7);
+  const open=tasks.filter(t=>t.s!=="publicado");
+  $("stats").innerHTML=
+   `<div class="stat"><b>${open.length}</b>em aberto</div>`+
+   `<div class="stat late"><b>${open.filter(t=>t.d<hoje).length}</b>atrasadas</div>`+
+   `<div class="stat"><b>${open.filter(t=>t.d>=hoje&&t.d<=em7).length}</b>vencem em 7 dias</div>`;
+  const vis=tasks.filter(t=>(!fc||t.c===fc)&&(!fp||t.p===fp)).sort((a,b)=>a.d.localeCompare(b.d));
+  $("board").innerHTML=ST.map(([k,n])=>{
+    const l=vis.filter(t=>t.s===k);
+    return `<section class="col" data-s="${k}"><h2>${n}<span>${l.length}</span></h2>`+
+     (l.map(t=>{const late=t.s!=="publicado"&&t.d<hoje;
+      return `<article class="card ${late?"late":""}" draggable="true" data-id="${t.id}" style="--p:${PR[t.pr]}">
+       <p>${esc(t.t)}</p>
+       <div class="meta"><span class="dot" style="--c:${PC[t.p]}"></span>${t.p}<span>${esc(t.c)}</span><span class="due ${late?"late":""}">${late?"Atrasada · ":""}${fmt(t.d)}</span></div>
+       ${ckHtml(t)}<div class="acts"><select aria-label="Status" data-id="${t.id}">${ST.map(([v,x])=>`<option value="${v}" ${v===t.s?"selected":""}>${x}</option>`).join("")}</select><button data-del="${t.id}" aria-label="Excluir demanda">Excluir</button></div></article>`}).join("")||'<div class="empty">Nenhuma demanda aqui.</div>')+`</section>`}).join("");
+  $("cal").innerHTML=calHtml(vis);
+  document.querySelector("main").classList.toggle("calon",view==="cal");
+  document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.v===view));
+}
+$("f").onsubmit=e=>{e.preventDefault();
+  const lk=$("link").value.trim();
+  tasks.push({id:Date.now(),t:$("titulo").value.trim(),c:$("cliente").value.trim(),p:$("plat").value,d:$("prazo").value,pr:$("prio").value,s:"fazer",
+    l:/^https?:\/\//i.test(lk)?lk:"",ck:$("etapas").value.split(",").map(x=>x.trim()).filter(Boolean).map(x=>({x,o:0}))});
+  $("link").value="";
+  $("titulo").value="";save();render()};
+$("fc").onchange=$("fp").onchange=render;
+const b=$("board");
+b.onchange=e=>{const d=e.target.dataset;
+  if(d.id){tasks.find(t=>t.id==d.id).s=e.target.value;save();render()}
+  else if(d.k!==undefined){tasks.find(t=>t.id==d.t).ck[d.k].o=e.target.checked?1:0;save();render()}};
+b.onkeydown=e=>{const i=e.target.dataset.add,v=e.target.value&&e.target.value.trim();
+  if(e.key==="Enter"&&i&&v){const t=tasks.find(t=>t.id==i);(t.ck=t.ck||[]).push({x:v,o:0});save();render()}};
+document.querySelector(".tabs").onclick=e=>{if(e.target.dataset.v){view=e.target.dataset.v;render()}};
+const cl=$("cal");
+cl.onclick=e=>{const n=e.target.dataset.nav;if(n===undefined)return;
+  if(n==="0"){mes=new Date();mes.setDate(1)}else mes.setMonth(mes.getMonth()+Number(n));render()};
+cl.ondragstart=e=>{const c=e.target.closest(".chip");if(c)e.dataTransfer.setData("text/plain",c.dataset.cid)};
+cl.ondragover=e=>{if(e.target.closest(".day"))e.preventDefault()};
+cl.ondrop=e=>{const d=e.target.closest(".day");if(!d)return;e.preventDefault();
+  const t=tasks.find(t=>t.id==e.dataTransfer.getData("text/plain"));if(t){t.d=d.dataset.date;save();render()}};
+b.onclick=e=>{const i=e.target.dataset.del;if(i&&confirm("Excluir esta demanda?")){tasks=tasks.filter(t=>t.id!=i);save();render()}};
+b.ondragstart=e=>{const c=e.target.closest(".card");if(c)e.dataTransfer.setData("text/plain",c.dataset.id)};
+b.ondragover=e=>{const c=e.target.closest(".col");if(c){e.preventDefault();document.querySelectorAll(".col").forEach(x=>x.classList.toggle("over",x===c))}};
+b.ondragleave=e=>{if(!e.relatedTarget||!b.contains(e.relatedTarget))document.querySelectorAll(".col").forEach(x=>x.classList.remove("over"))};
+b.ondrop=e=>{e.preventDefault();const c=e.target.closest(".col");if(!c)return;
+  const t=tasks.find(t=>t.id==e.dataTransfer.getData("text/plain"));if(t){t.s=c.dataset.s;save();}render()};
+render();
+</script>
+</body>
+</html>
